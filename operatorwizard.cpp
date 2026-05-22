@@ -10,6 +10,15 @@
 #include <shlobj.h>
 #include <vector>
 
+template <typename F>
+struct ScopeGuard {
+	F func;
+	~ScopeGuard() { func(); }
+};
+
+template <typename F>
+ScopeGuard(F) -> ScopeGuard<F>;
+
 namespace fs = std::filesystem;
 
 using Data = std::vector<std::pair<std::string, std::string>>;
@@ -60,6 +69,10 @@ void setColor(int r, int g, int b) {
 	std::cout << "\033[38;2;" << r << ";" << g << ";" << b << "m";
 }
 
+void reset() {
+	std::cout << "\x1b[0m"; // reset to terminal defaults
+}
+
 bool writeData(Data dta) {
 	std::ofstream outFile(filePath, std::ios::out);
 	if (outFile.is_open()) {
@@ -70,7 +83,7 @@ bool writeData(Data dta) {
 	} else {
 		setColor(255, 100, 100);
 		std::cout << "Couldn't write data.";
-		setColor(255, 255, 255);
+		reset();
 		return false;
 	}
 	return true;
@@ -84,6 +97,8 @@ std::string input() { // returns the lowered input
 }
 
 int main() {
+	ScopeGuard onExit = {reset};
+	
 	fs::path localAppData = GetLocalAppDataPath();
 	if (localAppData.empty()) {
 		std::cerr << "Failed to locate AppData\\Local directory.\n";
@@ -123,8 +138,7 @@ int main() {
 	std::cout << "Options: 'alias', 'manage'\n";
 	setColor(89, 153, 255);
 	std::cout << "Operator, how may I direct your call? ";
-	setColor(255, 255, 255);
-	
+	reset();
 	
 	std::string number = input(); // number as in the number the operator would dial... Very funny I know
 	
@@ -134,19 +148,17 @@ int main() {
 		std::cout << "Leave blank to exit\n";
 		setColor(255, 164, 89);
 		std::cout << "Alias for current directory? ";
-		setColor(255, 255, 255);
+		reset();
 		
 		std::string alias = input();
 		
 		if (alias == "") {
 			setColor(255, 100, 100);
 			std::cout << "Alias blank, exiting.\n";
-			setColor(255, 255, 255);
 			return 0;
 		}else if (alias == "manage" || alias == "alias") {
 			setColor(255, 100, 100);
 			std::cout << "Alias conflicts with keywords.\n";
-			setColor(255, 255, 255);
 			return 0;
 		}
 		
@@ -158,7 +170,6 @@ int main() {
 				std::cout << d.second << "\n";
 				setColor(255, 100, 100);
 				std::cout << "Exiting.\n";
-				setColor(255, 255, 255);
 				return 0;
 			}
 		}
@@ -170,7 +181,6 @@ int main() {
 		} catch (const fs::filesystem_error& e) {
 			setColor(255, 100, 100);
 			std::cerr << "Error: " << e.what() << "\nCouldn't get CWD\n";
-			setColor(255, 255, 255);
 			return 0;
 		}
 		
@@ -179,7 +189,6 @@ int main() {
 		
 		setColor(100, 255, 100);
 		std::cout << "Alias accepted, added alias \"" << alias << "\" -> \"" << cwd << "\"\n";
-		setColor(255, 255, 255);
 		return 0;
 	}else if (number == "manage") {
 		while (true) {
@@ -187,7 +196,7 @@ int main() {
 			std::cout << "\nOptions: 'list', 'delete', 'quit'\n";
 			setColor(255, 164, 89);
 			std::cout << "Action: ";
-			setColor(255, 255, 255);
+			reset();
 			std::string act = input();
 			
 			if (act == "list" || act == "l") {
@@ -205,12 +214,11 @@ int main() {
 			} else if (act == "quit" || act == "q" || act == "exit") {
 				setColor(100, 255, 100);
 				std::cout << "\nAll changes saved.\n";
-				setColor(255, 255, 255);
 				return 0;
 			}else if (act == "delete" || act == "del") {
 				setColor(89, 153, 255);
 				std::cout << "\nAlias to delete? ";
-				setColor(255, 255, 255);
+				reset();
 				std::string al = input();
 				
 				bool foundIt = false;
@@ -226,19 +234,19 @@ int main() {
 					if (writeData(data)) {
 						setColor(100, 255, 100);
 						std::cout << "Successfully deleted alias.\n";
-						setColor(255, 255, 255);
+						reset();
 					}else{
 						return 1;
 					}
 				}else {
 					setColor(255, 100, 100);
 					std::cout << "Could not find alias.\n";
-					setColor(255, 255, 255);
+					reset();
 				}
 			}else{
 				setColor(255, 100, 100);
 				std::cout << "\nUnknown action.\n";
-				setColor(255, 255, 255);
+				reset();
 			}
 		}
 	}else {
@@ -253,7 +261,6 @@ int main() {
 		if (new_path == "") {
 			setColor(255, 100, 100);
 			std::cout << "Couldn't find alias.\n";
-			setColor(255, 255, 255);
 			return 0;
 		}
 		
