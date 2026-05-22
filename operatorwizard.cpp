@@ -241,8 +241,6 @@ int main() {
 				setColor(255, 255, 255);
 			}
 		}
-		
-		
 	}else {
 		std::string new_path = "";
 		for (auto a : data) {
