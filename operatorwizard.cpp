@@ -65,8 +65,21 @@ Data getData() {
 	return out;
 }
 
-void setColor(int r, int g, int b) {
-	std::cout << "\033[38;2;" << r << ";" << g << ";" << b << "m";
+struct Color {
+	int r;
+	int g;
+	int b;
+};
+
+Color errorColor        { 255, 100, 100 };
+Color brightErrorColor  { 255, 150, 150 };
+Color greyColor         { 100, 100, 100 };
+Color blueColor         {  89, 153, 255 };
+Color yellowColor       { 255, 164,  89 };
+Color greenColor        { 100, 255, 100 };
+
+void setColor(Color c) {
+	std::cout << "\033[38;2;" << c.r << ";" << c.g << ";" << c.b << "m";
 }
 
 void reset() {
@@ -81,7 +94,7 @@ bool writeData(Data dta) {
 		}
 		outFile.close();
 	} else {
-		setColor(255, 100, 100);
+		setColor(errorColor);
 		std::cout << "Couldn't write data.";
 		reset();
 		return false;
@@ -134,9 +147,9 @@ int main() {
 	
 	Data data = getData();
 	
-	setColor(100, 100, 100);
+	setColor(greyColor);
 	std::cout << "Options: 'alias', 'manage'\n";
-	setColor(89, 153, 255);
+	setColor(blueColor);
 	std::cout << "Operator, how may I direct your call? ";
 	reset();
 	
@@ -144,31 +157,31 @@ int main() {
 	
 	
 	if (number == "alias") {
-		setColor(100, 100, 100);
+		setColor(greyColor);
 		std::cout << "Leave blank to exit\n";
-		setColor(255, 164, 89);
+		setColor(yellowColor);
 		std::cout << "Alias for current directory? ";
 		reset();
 		
 		std::string alias = input();
 		
 		if (alias == "") {
-			setColor(255, 100, 100);
+			setColor(errorColor);
 			std::cout << "Alias blank, exiting.\n";
 			return 0;
 		}else if (alias == "manage" || alias == "alias") {
-			setColor(255, 100, 100);
+			setColor(errorColor);
 			std::cout << "Alias conflicts with keywords.\n";
 			return 0;
 		}
 		
 		for (auto d : data) {
 			if (d.first == alias) {
-				setColor(255, 100, 100);
+				setColor(errorColor);
 				std::cout << "Alias already in use by: ";
-				setColor(255, 150, 150);
+				setColor(brightErrorColor);
 				std::cout << d.second << "\n";
-				setColor(255, 100, 100);
+				setColor(errorColor);
 				std::cout << "Exiting.\n";
 				return 0;
 			}
@@ -179,7 +192,7 @@ int main() {
 			fs::path cwdpth = fs::current_path();
 			cwd = cwdpth.string();
 		} catch (const fs::filesystem_error& e) {
-			setColor(255, 100, 100);
+			setColor(errorColor);
 			std::cerr << "Error: " << e.what() << "\nCouldn't get CWD\n";
 			return 0;
 		}
@@ -187,36 +200,36 @@ int main() {
 		data.push_back({alias, cwd});
 		writeData(data);
 		
-		setColor(100, 255, 100);
+		setColor(greenColor);
 		std::cout << "Alias accepted, added alias \"" << alias << "\" -> \"" << cwd << "\"\n";
 		return 0;
 	}else if (number == "manage") {
 		while (true) {
-			setColor(100, 100, 100);
+			setColor(greyColor);
 			std::cout << "\nOptions: 'list', 'delete', 'quit'\n";
-			setColor(255, 164, 89);
+			setColor(yellowColor);
 			std::cout << "Action: ";
 			reset();
 			std::string act = input();
 			
 			if (act == "list" || act == "l") {
-				setColor(255, 164, 89);
+				setColor(yellowColor);
 				std::cout << "\nAlias\n--Path\n\n";
 				
 				for (auto d : data) {
-					setColor(89, 153, 255);
+					setColor(blueColor);
 					std::cout << d.first;
-					setColor(100, 100, 100);
+					setColor(greyColor);
 					std::cout << "\n->";
-					setColor(255, 164, 89);
+					setColor(yellowColor);
 					std::cout << d.second << "\n";
 				}
 			} else if (act == "quit" || act == "q" || act == "exit") {
-				setColor(100, 255, 100);
+				setColor(greenColor);
 				std::cout << "\nAll changes saved.\n";
 				return 0;
 			}else if (act == "delete" || act == "del") {
-				setColor(89, 153, 255);
+				setColor(blueColor);
 				std::cout << "\nAlias to delete? ";
 				reset();
 				std::string al = input();
@@ -232,19 +245,19 @@ int main() {
 				
 				if (foundIt) {
 					if (writeData(data)) {
-						setColor(100, 255, 100);
+						setColor(greenColor);
 						std::cout << "Successfully deleted alias.\n";
 						reset();
 					}else{
 						return 1;
 					}
 				}else {
-					setColor(255, 100, 100);
+					setColor(errorColor);
 					std::cout << "Could not find alias.\n";
 					reset();
 				}
 			}else{
-				setColor(255, 100, 100);
+				setColor(errorColor);
 				std::cout << "\nUnknown action.\n";
 				reset();
 			}
@@ -259,7 +272,7 @@ int main() {
 		}
 		
 		if (new_path == "") {
-			setColor(255, 100, 100);
+			setColor(errorColor);
 			std::cout << "Couldn't find alias.\n";
 			return 0;
 		}
