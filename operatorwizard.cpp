@@ -213,8 +213,7 @@ int main() {
 			std::string act = input();
 			
 			if (act == "list" || act == "l") {
-				setColor(yellowColor);
-				std::cout << "\nAlias\n--Path\n\n";
+				std::cout << "\n";
 				
 				for (auto d : data) {
 					setColor(blueColor);
